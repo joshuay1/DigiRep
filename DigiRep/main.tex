@@ -1,0 +1,232 @@
+\documentclass[letterpaper]{article}
+\usepackage[submission]{aaai2026}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage[hyphens]{url}
+\usepackage{graphicx}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\usepackage{natbib}
+\usepackage{caption}
+\frenchspacing
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+
+\pdfinfo{
+/TemplateVersion (2026.1)
+}
+
+\setcounter{secnumdepth}{0}
+
+\newcommand{\figplaceholder}[2]{%
+\begin{center}
+\fbox{%
+\begin{minipage}[c][#1][c]{0.92\linewidth}
+\centering
+\textbf{Figure placeholder}\\[0.5em]
+#2
+\end{minipage}}
+\end{center}}
+
+\title{Evidence Asymmetry in Legislative Digital Twins: Augmenting Swiss Parliamentary Vote Prediction with Public Interest Records}
+\author{Anonymous Submission}
+\affiliations{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper investigates whether large language model (LLM)-based agents can serve as behavioral digital twins of Swiss parliamentarians by predicting roll-call votes across policy domains, parties, and data-scarce settings. We focus on a central failure mode: evidence asymmetry. Public textual evidence is not equally available or equally informative across parties and topics, which can make some parliamentary actors harder to simulate than others. We first compare two approaches: a black-box predictor obtained by fine-tuning a GPT-OSS 20B model on historical roll-call data, and an interpretable agent pipeline that constructs a knowledge graph for each party-topic pair from speeches, roll calls, manifestos, and press releases. Preliminary results suggest that both approaches perform unevenly across parties and policy domains. We therefore propose an affiliation-augmented methodology that incorporates public records of lawmakers' declared interests, firm links, and political financing as structured evidence. The central hypothesis is that such records provide complementary predictive signal when textual party-topic evidence is sparse. We discuss how to evaluate this hypothesis without making causal claims about influence, and identify methodological challenges including vote polarity inversions, sparse party-topic cells, evidence provenance, and political pluralism.
+\end{abstract}
+
+\section{Introduction}
+
+Political institutions generate rich traces of legislative behavior: roll-call votes, speeches, manifestos, press releases, and public records about interests and political financing. These traces raise a natural question for computational social science and AI: can LLM-based agents approximate the voting behavior of elected representatives well enough to function as behavioral digital twins for analysis and simulation?
+
+This question is technically and normatively demanding. The prediction task is not merely to classify text. A parliamentary vote can reflect ideology, party discipline, issue framing, affiliations, and procedural details such as rejection motions. The Swiss Parliament is a useful setting for this study because the task spans multiple parties and policy domains. At the same time, evidence can be sparse or uneven for a given party-topic pair: some combinations have many historical roll calls and extensive public text, while others have only a handful of votes or less informative textual evidence.
+
+We study roll-call prediction as a three-way classification task: \emph{Yes}, \emph{No}, or \emph{Abstention}. The central empirical question is how LLM-based predictors behave as the amount and kind of available evidence varies. We compare a fine-tuned black-box model with an interpretable, retrieval-oriented agent based on party-topic knowledge graphs. We then ask whether public records of firm links, declared interests, and political financing can reduce performance gaps in sparse or underrepresented settings.
+
+Our preliminary contributions are:
+\begin{itemize}
+    \item We frame Swiss parliamentary vote prediction as an evidence-asymmetric digital twin problem at the party-topic level.
+    \item We compare a fine-tuned GPT-OSS 20B model against a no-fine-tuning knowledge graph agent that uses GPT-4o at inference time.
+    \item We analyze performance as a function of training roll-call volume, with preliminary plots suggesting different regimes of low-data priors, intermediate instability, and higher-data recovery.
+    \item We propose an affiliation-augmented methodology that adds public interest, firm-link, and financing records as structured evidence for sparse party-topic cells.
+    \item We identify systematic limitations across parties, topics, and vote polarity conventions that must be addressed before deployment.
+\end{itemize}
+
+\section{Related Work}
+
+The project connects to three lines of work. First, LLMs have been used to simulate individuals, populations, and social behavior, including generative agents and synthetic survey respondents \citep{park2023generative,argyle2023outofone}. This literature motivates the digital twin framing but also raises questions about fidelity, bias, and validation.
+
+Second, retrieval-augmented generation and knowledge-grounded question answering offer ways to connect neural language models to explicit evidence rather than relying only on parametric memory \citep{lewis2020retrieval}. For political settings, this matters because explanations must be inspectable: analysts should be able to ask which prior votes, speeches, manifesto claims, or public-interest records supported a prediction.
+
+Third, computational political science has long modeled legislative voting using party, ideology, text, and institutional features. LLM-based agents differ from many traditional models because they can combine structured voting histories with unstructured evidence, but they also risk overconfident prediction in sparse or ambiguous settings. A complete version of this draft should add focused citations on roll-call prediction, ideal-point estimation, Swiss legislative data, and parliamentary text analysis.
+
+\section{Problem Setting}
+
+Let a voting instance consist of a parliamentarian or party, a policy topic, a legislative proposal, and the surrounding textual, structured, and procedural context. The model predicts one of three labels: \emph{Yes}, \emph{No}, or \emph{Abstention}. We aggregate analysis at the party-topic pair level because this is where data scarcity and evidence asymmetry are most visible. For example, one party may have dense historical evidence on economic policy but little evidence on education or security.
+
+The key independent variable in the current analysis is the number of roll calls available in the training set for a party-topic pair. This quantity serves as a natural measure of historical data scarcity. We also treat the availability of public textual and structured affiliation evidence as a second dimension of scarcity. This lets us ask whether LLM agents succeed in low-data settings by exploiting ideological and semantic priors, whether they require dense party-topic histories to perform reliably, and whether structured interest records help when text is thin.
+
+\section{Data Sources}
+
+The current pipeline uses four broad textual and behavioral evidence sources:
+\begin{itemize}
+    \item \textbf{Roll-call votes}: historical Yes/No/Abstention labels and available metadata about motions, bills, and parliamentary sessions.
+    \item \textbf{Speeches}: parliamentary debates and statements that can reveal issue positions, framing, and party-specific argumentation.
+    \item \textbf{Manifestos}: party platforms and electoral documents that express party positions.
+    \item \textbf{Press releases}: public party communications that may be closer in time to specific legislative controversies.
+\end{itemize}
+
+The proposed extension adds structured public-interest evidence:
+\begin{itemize}
+    \item \textbf{Declared interests and firm links}: SwissParl PersonInterest records and related public information about lawmakers' institutional and corporate affiliations.
+    \item \textbf{Political financing}: publicly available records from the Swiss Federal Audit Office political financing portal, when temporally matched to the relevant voting period.
+    \item \textbf{Sector mappings}: firm-level links aggregated to sectors or policy-relevant industries to reduce sparsity and avoid overfitting to individual organizations.
+\end{itemize}
+
+We treat these data as predictive context rather than causal evidence of influence. The empirical question is whether they provide complementary signal when speeches, manifestos, and press releases are sparse or ambiguous.
+
+\section{Method 1: Black-Box Fine-Tuned Predictor}
+
+The first approach fine-tunes a GPT-OSS 20B model on roll-call data. The model receives the available representation of a voting instance and predicts a Yes/No/Abstention label. Evaluation is performed at the party-topic pair level, with results grouped by the number of training roll calls available for that pair.
+
+This design tests whether supervised fine-tuning can learn policy-specific legislative behavior under varying degrees of data scarcity. In the low-data regime, the model cannot rely heavily on memorized party-topic voting histories. Strong performance there would suggest that it leverages broader semantic, ideological, or party-level priors. At higher data volumes, the model should have enough historical examples to adapt more directly to empirical voting patterns.
+
+\begin{figure}[t]
+\figplaceholder{1.45in}{Replace with the black-box model data-scarcity plot. Suggested file: \texttt{figures/sft\_data\_scarcity\_curves.pdf}. The final plot should show accuracy and macro-F1 against the number of roll calls in the training set.}
+\caption{Preliminary performance of the fine-tuned GPT-OSS 20B predictor as a function of party-topic training roll-call volume.}
+\label{fig:sft-scarcity}
+\end{figure}
+
+\section{Method 2: Knowledge-Grounded Interpretable Agent}
+
+The second approach constructs one knowledge graph for each party-topic pair. Each graph links relevant political actors, parties, proposals, roll calls, speeches, manifesto claims, press releases, and policy concepts. The important design requirement is that edges preserve named relations and evidence provenance, so that predictions can be traced back to the sources and relations used by the agent. The exact edge ontology should be reported in the full methods section once finalized.
+
+At inference time, GPT-4o queries the relevant graph and generates a prediction without any model fine-tuning. This makes the pipeline more interpretable than the black-box predictor: a prediction can be accompanied by a path through the graph that links the current policy decision to prior legislative behavior and public statements.
+
+\begin{figure}[t]
+\figplaceholder{1.45in}{Replace with the knowledge-graph model data-scarcity plot. Suggested file: \texttt{figures/kg\_data\_scarcity\_curves.pdf}.}
+\caption{Preliminary performance of the knowledge-grounded agent across party-topic training roll-call volumes.}
+\label{fig:kg-scarcity}
+\end{figure}
+
+\begin{figure}[t]
+\figplaceholder{1.45in}{Replace with an example graph reasoning path or model-output audit trace. Suggested file: \texttt{figures/kg\_reasoning\_example.pdf}.}
+\caption{Example of an auditable reasoning path from the party-topic knowledge graph to a vote prediction.}
+\label{fig:kg-reasoning}
+\end{figure}
+
+\section{Method 3: Affiliation-Augmented Prediction}
+
+The proposed third approach augments either prediction pipeline with structured evidence about lawmakers' declared interests, firm links, and political financing. The motivation is not to claim that these relationships causally determine votes. Instead, the goal is to test whether public affiliation records provide predictive signal in cases where roll-call history and textual party evidence are sparse.
+
+For each voting instance, the model receives only affiliation and financing information that would have been publicly available before the vote. Firm-level links can be mapped to broader sectors, industries, or policy areas, reducing sparsity and making the representation more robust than a raw list of organization names. These features can be used in three ways: as inputs to a classical classifier, as structured nodes in the knowledge graph, or as retrieved evidence for an LLM agent.
+
+The crucial comparison is between text-only, affiliation-only, and text-plus-affiliation systems. If affiliation data improves performance mainly for sparse party-topic cells or for parties with weaker public textual coverage, then it directly addresses the evidence-asymmetry problem. If it improves performance uniformly, it may be a general predictor of legislative behavior. If it does not improve performance beyond party and topic priors, then the added complexity is not justified.
+
+\section{Evaluation}
+
+We evaluate predictions using accuracy and macro-F1. Accuracy captures overall correctness but can hide majority-class behavior when labels are imbalanced. Macro-F1 is therefore essential for distinguishing models that predict common labels correctly from models that handle Yes, No, and Abstention more evenly.
+
+Results are analyzed by party-topic training volume and by evidence availability. We use the number of historical roll calls in the training set as the scarcity axis and inspect whether performance changes monotonically, stabilizes, or shows regime shifts. The final version should specify exactly how confidence intervals or bands are estimated for each data-volume bin.
+
+To evaluate the affiliation-augmented methodology, we compare:
+\begin{itemize}
+    \item \textbf{Text-only}: roll calls, speeches, manifestos, and press releases.
+    \item \textbf{Affiliation-only}: declared interests, firm links, financing records, and sector mappings.
+    \item \textbf{Combined}: textual, behavioral, and affiliation evidence together.
+\end{itemize}
+
+We also include permutation and ablation checks. Shuffling firm links within party or time period should reduce any genuine affiliation signal while preserving broad party composition. Comparing firm-level features with sector-level features tests whether the model relies on meaningful policy-economy structure rather than memorizing organization names.
+
+\section{Preliminary Results}
+
+\subsection{Black-Box Fine-Tuning}
+
+The fine-tuned model begins with high accuracy, approximately 0.85--0.90, when very few roll calls are available. This suggests that the model may exploit ideological and semantic priors rather than merely memorizing past votes. Accuracy dips moderately around 25--50 roll calls, to approximately 0.75--0.80, and then stabilizes or slightly recovers toward approximately 0.85 when 100 or more roll calls are available.
+
+Macro-F1 follows a more concerning pattern. It is elevated in the low-data regime, around 0.80--0.90, but drops more sharply than accuracy in the intermediate regime, falling to approximately 0.60 around 50--75 roll calls. It later recovers toward approximately 0.70--0.75 at higher data volumes. The divergence between accuracy and F1 suggests that the model may default to majority-class predictions at intermediate data volumes; a working hypothesis is that this regime contains enough examples to introduce noisy empirical signal but not enough to learn balanced stance behavior.
+
+\subsection{Knowledge-Grounded Agent}
+
+The knowledge-grounded agent shows more stable accuracy across the data spectrum, hovering around 0.75--0.80. Its confidence bands appear narrower than those of the fine-tuned model, suggesting more consistent behavior across party-topic pairs. Although its peak accuracy is slightly lower than the fine-tuned model's best cases, it appears more robust in the intermediate data regime.
+
+Macro-F1 is more volatile. It starts high, approximately 0.80--0.90, in the low-data regime, drops sharply to approximately 0.40--0.50 in the 25--75 roll-call range, and then recovers toward approximately 0.65--0.70. The high variance in the low-data regime likely reflects genuine heterogeneity in whether unstructured sources adequately represent specific parties and topics.
+
+\begin{table}[t]
+\centering
+{\footnotesize
+\begin{tabular}{@{}p{0.28\linewidth}@{\hspace{0.5em}}p{0.31\linewidth}@{\hspace{0.5em}}p{0.31\linewidth}@{}}
+\hline
+\textbf{Approach} & \textbf{Strength} & \textbf{Main Risk} \\
+\hline
+Fine-tuned GPT-OSS 20B & Higher peak accuracy & Black-box behavior \\
+Knowledge graph agent & Auditable reasoning paths & Uneven evidence coverage \\
+Affiliation-augmented model & Sparse-evidence signal & Spurious association \\
+\hline
+\end{tabular}
+}
+\caption{Summary of the methodological tradeoff between predictive performance, interpretability, and evidence augmentation.}
+\label{tab:approach-summary}
+\end{table}
+
+\section{Evidence Asymmetry Across Parties and Topics}
+
+Both initial approaches struggle with specific parties and issue domains. Right-wing and conservative parties, including the Federal Democratic Union, Romandy Citizens' Movement, Swiss People's Party, and Ticino League, show lower accuracy and F1. One likely explanation is that these parties have less structured or publicly available textual evidence in the current corpus. Another possibility is that internally heterogeneous voting behavior makes their votes harder to infer from general ideological cues.
+
+The hardest topics include Education and Research, Security and Defense, Human Rights, and Immigration. These domains appear less predictable than LGBT/family policy and economic topics. A plausible interpretation is that the ideological signals in speeches, manifestos, and press releases are weaker, more conditional, or more procedurally dependent in these areas.
+
+This pattern motivates the affiliation-augmented methodology. The paper should test whether public firm links, declared interests, and financing records reduce these gaps, especially in sparse party-topic cells. The strongest evidence would be an interaction: affiliation features improve performance most when textual evidence is weak, while permutation tests show that the improvement is not explained by party labels alone.
+
+\begin{figure}[t]
+\figplaceholder{1.45in}{Replace with the party/topic limitation plot. Suggested file: \texttt{figures/party\_topic\_performance.pdf}.}
+\caption{Preliminary evidence of evidence asymmetry across parties and policy topics.}
+\label{fig:party-topic}
+\end{figure}
+
+\section{Discussion}
+
+The preliminary results indicate that data scarcity does not affect LLM-based legislative prediction in a simple monotonic way. Low-data performance can be surprisingly strong, suggesting that the models exploit priors about parties, policy language, and ideological structure. However, intermediate data regimes are unstable, particularly under macro-F1. This may occur when the model begins to react to limited empirical histories but the evidence remains noisy, imbalanced, or affected by uncorrected vote-polarity inversions.
+
+The broader lesson is that model performance is shaped not only by model architecture but also by which kinds of political evidence are visible. If some parties or topics leave fewer useful textual traces, then text-centered agents may systematically underperform for them. Public interest and affiliation records offer a way to test whether structured non-textual evidence can correct part of this imbalance.
+
+The knowledge-grounded agent remains useful as an audit layer. In real political settings, a prediction without an explanation is difficult to inspect. A graph-based pipeline can expose which prior votes, speeches, manifesto claims, declared interests, or sector links supported a prediction. Even when accuracy is slightly lower, this auditability may be necessary for responsible use.
+
+\section{Limitations and Preprocessing Challenges}
+
+The most immediate preprocessing issue is vote polarity. In the Swiss Parliament, a \emph{Yes} vote on a rejection motion can be substantively equivalent to opposing the underlying policy. Without correcting such inversions, the label space contains systematic noise. This issue is particularly important for LLM-based agents because the surface label and the substantive stance can point in opposite directions.
+
+The second limitation is evidence imbalance. Some party-topic pairs have extensive speeches, manifesto language, and public communications, while others are sparsely represented. This can create the appearance of model weakness when the underlying problem is incomplete evidence retrieval. Affiliation data may reduce this imbalance, but it can also introduce new biases if firm links are missing, unevenly reported, or more visible for some lawmakers than others.
+
+The third limitation is interpretive. Firm links, declared interests, and political financing records should not be treated as evidence of causal influence without a separate causal design. In this paper they are predictive and contextual variables. The language of the analysis should therefore distinguish between association, explanation, and influence.
+
+The fourth limitation is conceptual. A digital twin of a parliamentarian or party is not equivalent to a normative representative of a constituency. For this reason, a pluralism framing requires careful operationalization: the system must distinguish between simulating individual legislators, parties, issue publics, interest groups, and competing democratic viewpoints.
+
+\section{Next Steps}
+
+\textbf{Affiliation augmentation.} The next empirical step is to construct time-stamped features from SwissParl PersonInterest records, public firm links, sector mappings, and political financing data, then test whether they improve vote prediction in sparse party-topic settings.
+
+\textbf{Baseline and ablation ladder.} We will compare majority-class, party-prior, topic-prior, party-topic-prior, recency, text-only, affiliation-only, and combined models. The key test is whether affiliation features improve over strong party-topic and recency baselines.
+
+\textbf{Vote polarity correction.} We will build preprocessing rules that map procedural Yes/No labels to substantive policy stances when motions invert the meaning of a vote.
+
+\textbf{Reasoning-augmented predictions.} We plan to fine-tune LLMs and agents with GRPO-based reinforcement learning so that they generate explicit reasoning chains alongside Yes/No/Abstention predictions. This should come after the simpler affiliation-augmentation experiment establishes whether the extra evidence is useful.
+
+\textbf{Pluralist multi-agent design.} We will clarify whether pluralism should be operationalized as multiple party agents, constituency agents, policy-domain agents, or deliberative agents that expose competing arguments. Agent2Agent protocols may provide useful infrastructure for such architectures, but the conceptual unit of pluralism should be specified before system design.
+
+\section{Ethical Considerations}
+
+Political digital twins present clear risks. They may be mistaken for authentic representatives, used to manipulate political messaging, or evaluated only by predictive accuracy while ignoring explanation quality and democratic legitimacy. Affiliation-augmented systems add another risk: they may invite overinterpretation of firm links as proof of influence. Any deployment should therefore mark outputs as simulations, preserve provenance for all evidence, report uncertainty, and avoid presenting a generated prediction as a substitute for accountable political judgment.
+
+\section{Conclusion}
+
+This draft presents Swiss parliamentary roll-call prediction as an evidence-asymmetric digital twin problem. Fine-tuned black-box models show strong low-data and high-data performance but reveal stance-balance problems in intermediate regimes. Knowledge-grounded agents provide more stable accuracy and interpretable reasoning paths, though their performance depends heavily on evidence coverage. The proposed next step is to test whether public interest records, firm links, and political financing data provide complementary signal in sparse or underrepresented settings. If so, the contribution is not only a better vote predictor, but a methodology for diagnosing and reducing evidence asymmetry in political AI agents.
+
+\bibliography{references}
+
+\end{document}
