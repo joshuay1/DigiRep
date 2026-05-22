@@ -5,6 +5,7 @@
 \usepackage{courier}
 \usepackage[hyphens]{url}
 \usepackage{graphicx}
+\graphicspath{{figures/}}
 \urlstyle{rm}
 \def\UrlFont{\rm}
 \usepackage{natbib}
@@ -67,13 +68,19 @@ Our preliminary contributions are:
 This project sits at the intersection of legislative behavior modeling, LLM-based social simulation, and democratic digital-twin design. The central gap is not whether votes can be predicted in principle, but whether a model's evidentiary basis is equally reliable across parties, topics, and institutional contexts.
 
 \paragraph{Legislative behavior and roll-call prediction.}
-Computational political science has long used roll-call votes to infer latent political positions and predict legislative behavior. Text-based extensions connect the language of bills to voting patterns, enabling prediction on new legislation and interpretation of issue-specific political support \citep{gerrish2011predictingRollCalls}. Issue-adjusted ideal point models show that legislators can deviate from a single left--right dimension in systematic, policy-specific ways \citep{gerrish2012howTheyVote}. Later neural approaches replace one-dimensional positions with learned representations of bills and legislators, using word embeddings, graph neural networks, and joint representation learning to improve roll-call prediction \citep{kraft2016embeddingRollCall,yang2020jointRepresentation}. Related work also shows that non-vote evidence can be highly predictive: campaign contributions can forecast later congressional voting behavior even before a candidate enters office \citep{bonica2016inferringRollCallScores}. These studies establish strong predictive baselines, but they also motivate our concern: each evidence source captures a different, partial trace of political behavior.
+Computational political science has long used roll-call votes to infer latent political positions and predict legislative behavior. Text-based extensions connect the language of bills to voting patterns, enabling prediction on new legislation and interpretation of issue-specific political support \citep{gerrish2011predictingRollCalls}. Issue-adjusted ideal point models show that legislators can deviate from a single left--right dimension in systematic, policy-specific ways \citep{gerrish2012howTheyVote}. Later neural approaches replace one-dimensional positions with learned representations of bills and legislators, using word embeddings, graph neural networks, and joint representation learning to improve roll-call prediction \citep{kraft2016embeddingRollCall,yang2020jointRepresentation}. Graph-based extensions are especially relevant to our design: \citet{mou2021alignVotingStatements} align roll-call behavior with public statements in a heterogeneous legislative graph, while \citet{feng2022parPoliticalActorRepresentation} incorporate social context and expert knowledge for political actor representation. Related work also shows that non-vote evidence can be highly predictive: campaign contributions can forecast later congressional voting behavior even before a candidate enters office \citep{bonica2016inferringRollCallScores}. These studies establish strong predictive baselines, but they also motivate our concern: each evidence source captures a different, partial trace of political behavior.
 
 \paragraph{Votes, speeches, and institutional selection.}
 Roll calls are not neutral observations of sincere preference. In many legislatures, recorded votes are selected or published under institutional rules that can bias estimates of party cohesion and legislative behavior \citep{hug2010selectionEffects}. In parliamentary systems, party discipline further complicates interpretation: legislators may vote with the party while using speeches to signal constituency-specific or issue-specific preferences. Evidence from the Swiss legislature shows that speech-based scalings reveal substantially more intra-party heterogeneity than vote-based scalings, and that these differences track constituency-level preferences \citep{schwarz2017estimatingIntraParty}. This matters for legislative digital twins because the target behavior is not a single ground truth. Votes, speeches, manifestos, and public affiliations each reveal different aspects of representation.
 
 \paragraph{LLMs as political measurers and agents.}
 Recent work uses LLMs not only as classifiers but as sources of political measurement and simulation. Pairwise LLM comparisons can recover plausible latent positions of politicians on ideology and issue-specific scales such as gun control and abortion \citep{wu2023latentPositionsPoliticians}. Agentic approaches simulate political actors directly: the Political Actor Agent framework uses role-playing profiles, planning, and action modules for roll-call prediction, reporting strong accuracy and interpretable rationales \citep{li2025politicalActorAgent}. EuroParlVote extends this line to the multilingual European Parliament, linking speeches to roll-call votes while evaluating gender and ideological bias in LLM predictions \citep{yang2025demographicsDemocracy}. These papers show that LLMs can exploit broad political knowledge and unstructured text, but they also underline the need to separate genuine evidence use from parametric priors, memorized public knowledge, and demographic or ideological bias.
+
+\paragraph{Political neutrality and pluralistic outputs.}
+Political digital twins also inherit a deployment problem: their outputs may be read as politically neutral, even when every modeling choice encodes a position about what evidence counts and which perspectives are legitimate. \citet{fisher2025politicalNeutrality} argue that political neutrality in AI is theoretically and technically unattainable, but still worth approximating through context-specific mechanisms at the output, system, and ecosystem levels. Their taxonomy distinguishes refusal, avoidance, reasonable pluralism, and output transparency at the response level, as well as uniform neutrality, reflective neutrality, system transparency, and neutrality through diversity at broader levels. Work on pluralistic alignment further distinguishes Overton, steerable, and distributional pluralism \citep{sorensen2024roadmapPluralisticAlignment}; recent benchmarks operationalize Overton pluralism as coverage over human viewpoint clusters \citep{pooleDayan2026benchmarkingOvertonPluralism}, and modular approaches use multiple models to represent undercovered communities or perspectives \citep{feng2024modularPluralism}. These frameworks are useful for naming the problem, but our setting differs from open-ended chatbot pluralism: the relevant stance space is constrained by legislative evidence and provenance. This is directly relevant because a single vote prediction can collapse disagreement, uncertainty, and evidence imbalance into an apparently authoritative label. We therefore treat transparency, evidence provenance, and calibrated uncertainty as part of the representational task rather than as optional explanation layers.
+
+\paragraph{Evidence attribution and retrieval-grounded evaluation.}
+The knowledge-grounded agent also relates to work on attribution and retrieval-augmented generation evaluation. The Attributable to Identified Sources framework asks whether generated claims are supported by identifiable evidence \citep{rashkin2022measuringAttribution}. Evaluations of generative search engines distinguish citation recall, whether all generated statements are supported, from citation precision, whether citations actually support the statements they accompany \citep{liu2023evaluatingVerifiability}. RAGAS similarly decomposes retrieval-augmented generation into faithfulness, context relevance, and answer quality dimensions \citep{es2025ragasEvaluation}. These ideas support our view that the graph agent should be evaluated not only by whether it predicts the correct vote, but also by whether its rationale is attributable to retrieved legislative evidence.
 
 \paragraph{Synthetic publics and representation bias.}
 A parallel literature studies LLMs as proxies for people or populations. ``Silicon sampling'' argues that sufficiently conditioned language models can reproduce some aggregate patterns of public opinion across demographic groups \citep{argyle2023outofone}, while Turing Experiments provide a framework for testing whether LMs reproduce human-subject experimental behavior and where they introduce systematic distortions \citep{aher2023simulateMultipleHumans}. However, representational fidelity is uneven. OpinionQA shows that model opinions align more closely with some U.S. demographic groups than others and that human-feedback tuning can amplify certain opinion skews \citep{santurkar2023whoseOpinions}. Cross-national political simulations likewise perform better for vote choice than public opinion, better in English-speaking and two-party settings, and worse for younger voters or more complex political systems \citep{qi2025representationBias}. This literature directly motivates our evidence-asymmetry framing: if LLM simulations represent some groups and contexts better than others, legislative agents may also be systematically stronger for evidence-rich parties and topics.
@@ -115,9 +122,10 @@ The first approach fine-tunes a GPT-OSS 20B model on roll-call data. The model r
 This design tests whether supervised fine-tuning can learn policy-specific legislative behavior under varying degrees of data scarcity. In the low-data regime, the model cannot rely heavily on memorized party-topic voting histories. Strong performance there would suggest that it leverages broader semantic, ideological, or party-level priors. At higher data volumes, the model should have enough historical examples to adapt more directly to empirical voting patterns.
 
 \begin{figure}[t]
-\figplaceholder{1.45in}{Replace with the black-box model data-scarcity plot. Suggested file: \texttt{figures/sft\_data\_scarcity\_curves.pdf}. The final plot should show accuracy and macro-F1 against the number of roll calls in the training set.}
-\caption{Preliminary performance of the fine-tuned GPT-OSS 20B predictor as a function of party-topic training roll-call volume.}
-\label{fig:sft-scarcity}
+\centering
+\includegraphics[width=\linewidth]{sft_f1_scarcity.png}
+\caption{Macro-F1 of the fine-tuned GPT-OSS 20B predictor as a function of party-topic training roll-call volume. The LOWESS curve shows a high low-data regime, a mid-range decline, and partial recovery at higher roll-call counts; the histogram indicates how many party-topic cells fall into each scarcity bin.}
+\label{fig:sft-f1-scarcity}
 \end{figure}
 
 \section{Method 2: Knowledge-Grounded Interpretable Agent}
@@ -127,16 +135,18 @@ The second approach constructs one knowledge graph for each party-topic pair. Ea
 At inference time, GPT-4o queries the relevant graph and generates a prediction without any model fine-tuning. This makes the pipeline more interpretable than the black-box predictor: a prediction can be accompanied by a path through the graph that links the current policy decision to prior legislative behavior and public statements.
 
 \begin{figure}[t]
-\figplaceholder{1.45in}{Replace with the knowledge-graph model data-scarcity plot. Suggested file: \texttt{figures/kg\_data\_scarcity\_curves.pdf}.}
-\caption{Preliminary performance of the knowledge-grounded agent across party-topic training roll-call volumes.}
-\label{fig:kg-scarcity}
+\centering
+\includegraphics[width=\linewidth]{kg_f1_scarcity.png}
+\caption{Macro-F1 of the knowledge-grounded agent across party-topic training roll-call volumes. Compared with the fine-tuned model in Figure~\ref{fig:sft-f1-scarcity}, the graph-based agent exhibits a different scarcity profile, with substantial volatility in intermediate evidence regimes and recovery among higher-volume party-topic cells.}
+\label{fig:kg-f1-scarcity}
 \end{figure}
 
-\begin{figure}[t]
-\figplaceholder{1.45in}{Replace with an example graph reasoning path or model-output audit trace. Suggested file: \texttt{figures/kg\_reasoning\_example.pdf}.}
-\caption{Example of an auditable reasoning path from the party-topic knowledge graph to a vote prediction.}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{kg_audit_view.png}
+\caption{Example knowledge-graph view used by the interpretable agent. Policy concepts, prior proposals, and vote-label nodes are linked in a searchable graph, allowing a prediction to be inspected through the evidence paths that connect the current issue to previous parliamentary behavior.}
 \label{fig:kg-reasoning}
-\end{figure}
+\end{figure*}
 
 \section{Method 3: Affiliation-Augmented Prediction}
 
@@ -167,13 +177,13 @@ We also include permutation and ablation checks. Shuffling firm links within par
 
 The fine-tuned model begins with high accuracy, approximately 0.85--0.90, when very few roll calls are available. This suggests that the model may exploit ideological and semantic priors rather than merely memorizing past votes. Accuracy dips moderately around 25--50 roll calls, to approximately 0.75--0.80, and then stabilizes or slightly recovers toward approximately 0.85 when 100 or more roll calls are available.
 
-Macro-F1 follows a more concerning pattern. It is elevated in the low-data regime, around 0.80--0.90, but drops more sharply than accuracy in the intermediate regime, falling to approximately 0.60 around 50--75 roll calls. It later recovers toward approximately 0.70--0.75 at higher data volumes. The divergence between accuracy and F1 suggests that the model may default to majority-class predictions at intermediate data volumes; a working hypothesis is that this regime contains enough examples to introduce noisy empirical signal but not enough to learn balanced stance behavior.
+Macro-F1, shown in Figure~\ref{fig:sft-f1-scarcity}, follows a more concerning pattern. It is elevated in the low-data regime, around 0.80--0.90, but drops more sharply than accuracy in the intermediate regime, falling to approximately 0.60 around 50--75 roll calls. It later recovers toward approximately 0.70--0.75 at higher data volumes. The divergence between accuracy and F1 suggests that the model may default to majority-class predictions at intermediate data volumes; a working hypothesis is that this regime contains enough examples to introduce noisy empirical signal but not enough to learn balanced stance behavior.
 
 \subsection{Knowledge-Grounded Agent}
 
 The knowledge-grounded agent shows more stable accuracy across the data spectrum, hovering around 0.75--0.80. Its confidence bands appear narrower than those of the fine-tuned model, suggesting more consistent behavior across party-topic pairs. Although its peak accuracy is slightly lower than the fine-tuned model's best cases, it appears more robust in the intermediate data regime.
 
-Macro-F1 is more volatile. It starts high, approximately 0.80--0.90, in the low-data regime, drops sharply to approximately 0.40--0.50 in the 25--75 roll-call range, and then recovers toward approximately 0.65--0.70. The high variance in the low-data regime likely reflects genuine heterogeneity in whether unstructured sources adequately represent specific parties and topics.
+Macro-F1, shown in Figure~\ref{fig:kg-f1-scarcity}, is more volatile. It starts high, approximately 0.80--0.90, in the low-data regime, drops sharply to approximately 0.40--0.50 in the 25--75 roll-call range, and then recovers toward approximately 0.65--0.70. The high variance in the low-data regime likely reflects genuine heterogeneity in whether unstructured sources adequately represent specific parties and topics. The graph view in Figure~\ref{fig:kg-reasoning} illustrates why this approach remains useful despite the volatility: its predictions can be audited through explicit links among policy concepts, prior votes, and supporting text.
 
 \begin{table}[t]
 \centering
@@ -194,17 +204,18 @@ Affiliation-augmented model & Sparse-evidence signal & Spurious association \\
 
 \section{Evidence Asymmetry Across Parties and Topics}
 
-Both initial approaches struggle with specific parties and issue domains. Right-wing and conservative parties, including the Federal Democratic Union, Romandy Citizens' Movement, Swiss People's Party, and Ticino League, show lower accuracy and F1. One likely explanation is that these parties have less structured or publicly available textual evidence in the current corpus. Another possibility is that internally heterogeneous voting behavior makes their votes harder to infer from general ideological cues.
+Both initial approaches struggle with specific parties and issue domains. Figure~\ref{fig:party-performance} shows this pattern at the party level. Right-wing and conservative parties, including the Federal Democratic Union, Romandy Citizens' Movement, Swiss People's Party, and Ticino League, show lower accuracy and F1. One likely explanation is that these parties have less structured or publicly available textual evidence in the current corpus. Another possibility is that internally heterogeneous voting behavior makes their votes harder to infer from general ideological cues.
 
 The hardest topics include Education and Research, Security and Defense, Human Rights, and Immigration. These domains appear less predictable than LGBT/family policy and economic topics. A plausible interpretation is that the ideological signals in speeches, manifestos, and press releases are weaker, more conditional, or more procedurally dependent in these areas.
 
 This pattern motivates the affiliation-augmented methodology. Here, we test whether public firm links, declared interests, and financing records reduce these gaps, especially in sparse party-topic cells. The strongest evidence would be an interaction: affiliation features improve performance most when textual evidence is weak, while permutation tests show that the improvement is not explained by party labels alone.
 
-\begin{figure}[t]
-\figplaceholder{1.45in}{Replace with the party/topic limitation plot. Suggested file: \texttt{figures/party\_topic\_performance.pdf}.}
-\caption{Preliminary evidence of evidence asymmetry across parties and policy topics.}
-\label{fig:party-topic}
-\end{figure}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{party_accuracy.png}
+\caption{Party-level variation in prediction accuracy. Each point represents a party-topic cell, with color indicating the number of training roll calls available for that cell. The plot highlights that predictive reliability is uneven across parties rather than being a uniform property of the model.}
+\label{fig:party-performance}
+\end{figure*}
 
 \section{Discussion}
 
