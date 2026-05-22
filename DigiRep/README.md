@@ -26,3 +26,8 @@ Suggested figure filenames:
 - Add the final dataset construction details and train/test split protocol.
 - Make sure any self-citations are anonymized before submission.
 - Clean PDF metadata before uploading the anonymous submission.
+
+## Research Notes
+
+- `notes/evidence_conditioned_pluralism.md`: parking-lot note for a possible Evidence-Conditioned Pluralism Score inspired by OvertonScore. This is not part of the main submission yet.
+- `notes/democratic_representation_framing.md`: broader framing note on representation audits, underrepresented topics, and special-interest exposure.
