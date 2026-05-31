@@ -1,0 +1,207 @@
+\documentclass[letterpaper]{article}
+\usepackage[submission]{aaai2026}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage[hyphens]{url}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\usepackage{natbib}
+\usepackage{caption}
+\frenchspacing
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+
+\pdfinfo{
+/TemplateVersion (2026.1)
+}
+
+\setcounter{secnumdepth}{0}
+
+\newcommand{\figplaceholder}[2]{%
+\begin{center}
+\fbox{%
+\begin{minipage}[c][#1][c]{0.92\linewidth}
+\centering
+\textbf{Figure placeholder}\\[0.5em]
+#2
+\end{minipage}}
+\end{center}}
+
+\title{Graph-Augmented Digital Twins for Political Organizations}
+\author{Anonymous Submission}
+\affiliations{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent Large Language Models (LLMs)
+\end{abstract}
+
+\clearpage
+
+\section{Introduction}
+
+Political parties are a cornerstone of democracies. They transform the diverse preferences of members, supporters, and representatives into collective programs and coordinate action in legislatures and governments. In doing so, they reconcile competing priorities while maintaining sufficient internal cohesion to act collectively \citep{dalton2011political}.
+
+Yet, the processes through which parties translate internal preferences into collective positions are inherently demanding and not always supported by modern technology, especially as political actors continuously generate new information—through speeches, votes, position papers, and parliamentary instruments—at a pace that exceeds the capacity of traditional mechanisms to absorb and process it.
+
+This problem of aggregating complex and dispersed preferences becomes more acute when parties face multiple trade-offs or operate in fast-paced environments. In such settings, parties have traditionally relied on consultation instruments such as surveys, party conventions, or roll-call votes. While these mechanisms are designed to generate internal legitimacy and signal cohesion, they disproportionately reflect the views of the most politically active members, are costly and slow to deploy at scale, and provide only sparse and infrequent snapshots of intra-party preferences and organization \citep{novelli2024artificial}. Recovering contextual knowledge from these signals requires substantial inferential work that these instruments are not designed to perform.
+
+Recent work on artificial intelligence in digital democracy (DD) offers some potential solutions to this inferential gap, deploying Large Language Models (LLMs) to generate candidate-level predictions, understand and accept colletive decisions or provide feedback to participants \citep{gudino2024large, berdoz2026reasoning, pradeep2026agora, fulay2026ai}. Conditioned on public records of political actors---including speeches, votes, and position papers---, LLMs can construct computational representations of decisions and their underlying rationales grounded in observable behaviour. These representations can be queried through agent-based digital twins of individuals or collective entities, enabling the simulation of responses to novel policy questions and debates.
+
+When supported by appropriate security infrastructure, these digital twins can be connected to live public data sources through interoperability standards such as the Model Context Protocol, allowing real-time access to parliamentary databases, legislative records, and institutional repositories \citep{shah2025robust}. This enables both party members and citizens to interact with continuously updated representations of political behaviour rather than static historical archives.
+
+Whether conditioning LLM agents on institutional records and aggregating their outputs can reliably approximate collective party positions or identify common ground among members, however, remains an open empirical question.
+
+Here, we address this question empirically. Using Swiss parliamentary data—including speeches, roll-call votes, and party manifestos spanning 2003 to 2025—we construct knowledge graphs (KGs) as structured representations of parties’ collective memory across documents, policies, roll-call votes and targeted actors. We then evaluate whether these institutional records contain sufficient predictive signal for reinforcement learning fine-tuned agents to approximate party-level positions.
+
+Our contribution is based on evaluating this approach in three scenarios: (i) when diverse viewpoints must be integrated, (ii) when policy questions are novel, and (iii) when publicly available opinion data is scarce, core informational constraints faced by political parties. Under these conditions, we test whether institutional records provide sufficient signal for LLM-based agents to approximate \emph{Yes}, \emph{No}, or \emph{Abstention} party-level positions, showing both a methodological contribution to computational social science and a practical foundation for tools that support democratic decision-making.
+
+\section{Related Work}
+
+TBD
+
+\section{Dataset \& Methods}
+
+In this section, we describe our dataset and the methodology used to construct the knowledge graphs (KGs), the digital twins of political parties (DTs) and our benchmarks and evaluation metrics.
+
+Throughout our work, data spanning December 2003 to September 2023 is used as the training set, data from October 2023 to May 2024 as the evaluation set, and data from June 2024 to February 2026 as the test set. All experiments use LLMs with a knowledge cut-off prior to June 2024 to ensure alignment with this temporal split.
+
+\section{Dataset}
+
+We leverage unstructured data from Swiss legislative projects. These \emph{documents} fall into three categories: (i) roll-call votes in the final session (Yes/No/Abstention), (ii) parliamentary speeches during project discussions, and (iii) press releases, manifestos, and position papers. They are sourced from Swiss political parties’ official websites and OpenParlData.ch, an open standard and API for harmonized Swiss parliamentary data.
+
+We deploy DeepSeek-OCR 2 \citep{wei2026deepseek}, a layout-aware vision-language model for document understanding, followed by Apertus 8B \citep{apertus2025apertus} for translation, to convert 2D images containing text in German, French, or Italian into structured English. Speeches and roll-call votes are linked at the legislative project level and augmented with a common title and summary generated by GPT-5 Nano from the original legislative corpus.
+
+After data collection and processing, roll-call votes and speeches are partitioned 
+into 20 policy topics at the party level, defined via clustering over embeddings of 
+legislative project titles and summaries:
+\emph{International Trade and Economic Partnership Agreements},
+\emph{Family Policy, Gender Equality and Protection of Vulnerable Persons},
+\emph{Transportation and Telecommunications},
+\emph{Emergency and Crisis Governance Legislation},
+\emph{Environmental Law},
+\emph{Culture, Arts and Mass Media},
+\emph{International Human Rights and Immigration},
+\emph{Energy Policy},
+\emph{Economic Aid and Donations},
+\emph{Security and Defense},
+\emph{Financial Regulation},
+\emph{Labor Market Law},
+\emph{Education, Research and Innovation},
+\emph{Social Security},
+\emph{Judicial Organisation, Criminal and Civil Procedure},
+\emph{Federal Governance and Parliamentary Organization},
+\emph{Social Spending and Central Bank},
+\emph{Agricultural Law},
+\emph{Tax Policy},
+and \emph{Health Regulation}.
+
+ADD INFO OF DECLARED INTERESTS AND FIRM LINKS
+
+We treat the resulting dataset as predictive context rather than causal evidence of influence, and evaluate whether they provide complementary signal when speeches, manifestos, and press releases are sparse or ambiguous.
+
+\section{Majority Rule Definition}
+
+TBD
+
+\section{DPVA Knowledge Graphs Construction}
+
+KGs are structured representations of knowledge that organize interconnected information through graph structures, where entities and relations are represented as nodes and edges. In this context, they serve as structured representations of political parties’ collective memory by synthesizing historical records of decisions and statements. Predictions generated by LLM agents through queries over these representations can be traced back to underlying sources and summaries, enabling parties to audit and interpret various official positions. 
+
+Building on the work of \citeauthor{zhang2024extract} ( \citeyear{zhang2024extract}) proposing a framework for knowledge graph construction, here we follow a bottom-up approach to build knowledge graphs representing documents, policies, Yes/No/Abstention votes and actors targeted by policies for each party and topic (DPVA KGs). This approach provides an alternative to graph-based retrieval augmentation frameworks such as LightRAG \citep{guo2024lightrag} and Graphiti \citep{rasmussen2025zep} by predefining entity and relation types, yielding representations that are easier to interpret and visualize while reducing token usage in downstream agent queries compared to schema-free methods.
+Construction follows a four-steps procedure:
+
+\subsection{1. Inductive discovery of macro-dimensions and actors}
+
+We recover two types of background knowledge from the documents that anchor all downstream representations: \emph{macro-dimensions} and \emph{actors}.
+
+A \emph{macro-dimension} captures a single axis of political conflict latent in a legislative document, i.e., the core tension at stake (e.g., fiscal expansion vs. austerity, cantonal autonomy vs. federal centralisation). We extract macro-dimensions inductively via one LLM call per document, with extraction calibrated to document type: roll-call entries yield one to two macro-dimensions, speeches one to four, and press releases one to three after filtering non-relevant content.
+
+The resulting pool is refined into a deduplicated list of macro-dimensions through a global prompt that enforces three criteria: coverage (missing recurrent tensions), redundancy (merging or sharpening overlapping macro-dimensions), and specificity (removing overly generic or document-specific macro-dimensions). Each extracted macro-dimension is then mapped to its closest canonical counterpart.
+
+In parallel, we also extract \emph{actors} for each document, defined as individuals or social groups directly affected by the policy outcome. Administrative or implementing bodies are excluded; only end-recipients (e.g., part-time workers, early retirees, low-income households, cross-border commuters) are retained. Actor extraction is performed via a separate LLM call per document, followed by a global consolidation step that merges semantically equivalent labels and splits overly broad ones.
+
+\subsection{2. Document Enrichment and Structured Node Generation}
+
+We use the deduplicated sets of macro-dimensions and actors as the structured backbone for enriching documents in the training set and for generating the nodes of the DPVA Knowledge Graph. Specifically, both sets are incorporated into enrichment prompts constructed for each document, which instruct the LLM to extract more granular and disaggregated information from the data.
+
+The enrichment prompts require the LLM to generate three policy nodes, each defined by: (i) a single macro-dimension from the predefined set; (ii) a short label that is more specific than its parent macro-dimension; (iii) a two-to-three sentence description grounding the policy in the specific legislative proposal rather than the macro-dimension in the abstract; (iv) one or more targeted actors selected from the actors set; and (v) a party position field taking one of three values---Supports, Opposes, or Abstention---derived strictly from the available evidence.
+
+We further enforce a fixed edge schema within the enrichment prompt, rather than inferring relations post hoc. In addition to the policy nodes, the same enrichment prompt generates four node types and five edge types. The nodes are: documents (D), policies (P), votes (V), and actors (A). The edge types are: (a) Document $\rightarrow$ Has vote $\rightarrow$ Vote, where Vote $\in \{\text{Yes}, \text{No}, \text{Abstention}\}$; (b) Document $\rightarrow$ Contains $\rightarrow$ Policy; (c) Policy $\rightarrow$ Linked to $\rightarrow$ Vote; (d) Policy $\rightarrow$ Targets $\rightarrow$ Actor; and (e) Policy $\rightarrow$ Related to $\rightarrow$ Policy, connecting policy nodes within the same macro-dimension.
+
+To ensure consistency across document types, we adapt the enrichment process depending on the available evidence. When speeches are available but no roll-call vote exists, the LLM infers the party's position from deliberative content and provides an explicit rationale for that inference. Press releases, on the other hand, are processed in two sequential stages: first, a lightweight filtering step extracts only the sentences and paragraphs directly relevant to each policy node; second, these filtered excerpts are used to generate the same structured information described above from the party's language.
+
+\subsection{3. Policy Node Canonicalization}
+
+After enrichment, the same policy concept may surface under different labels across documents. For instance, \emph{Pension Age Increase} and \emph{Statutory Retirement Age Reform} may refer to the same underlying policy. Canonicalization resolves this redundancy by merging semantically equivalent policy nodes into a single canonical node, ensuring that the knowledge graph does not fragment a single concept across multiple representations.
+
+Canonicalization proceeds in two stages. First, policy nodes are grouped by macro-dimension. Within each group, only pairs that share the same lawmaker position (Supports, Opposes, or Abstention) and the same set of affected actors are considered candidates for merging. This constraint ensures that policy nodes are not merged when they encode different stances or target different populations. Next, candidate pairs within each equivalence class are filtered using the cosine similarity of their label embeddings, computed with OpenAI's text-embedding-3-large model. Only pairs whose similarity exceeds a threshold $\alpha = 0.4$ are passed to the merge step; all others are kept separate.
+
+Once the canonical mapping is constructed, all policy nodes are remapped accordingly.
+
+
+\section{GRPO Fine-Tuning Agents}
+
+We create and fine-tune, using reinforcement learning (RL), LLM agents representing political parties that query topic-level KGs to generate a chain of thought and produce one of three final labels for each title and summary of legislative projects in our test set: \emph{Yes}, \emph{No}, or \emph{Abstention}.
+
+\section{Votes prediction}
+
+To assess the predictive validity of the DPVA KGs, we cast vote prediction as a retrieval-augmented reasoning task. For each legislative project in our test set, an LLM agent acting as party's digital twin predicts the majority vote ---Yes, No, or Abstention---using evidence retrieved from the party's DPVA KGs, without access to the ground-truth vote or to any other party's record.
+
+The inference process begins by translating each legislative project of our test set into the same representational space as the DPVA KG. This is achieved by generating three policy nodes using the fixed macro-dimension and actor sets defined during graph construction.
+
+Retrieval then proceeds at the level of the representations generated. For each generated policy node, we identify the ones in the DPVA KG that share its macro-dimension, partition them by the Yes/No/Abstention vote cast, and retrieve---via cosine similarity over OpenAI \texttt{text-embedding-3-large} embeddings of label and description---the top-3 most similar nodes among those that received a "Yes" vote, the top-3 among those that received a "No" vote, and the top-3 among those that received an "Abstention". 
+
+Finally, the digital twin receives the information of the retrieved nodes within a structured reasoning text and produces a vote prediction. It evaluates the substantive similarity between each retrieved node and the policy node, focusing on mechanisms, affected groups, and direction of change rather than surface-level wording. Next, it determines which vote is most consistently supported within each macro-dimension and finally, it aggregates evidence across the policy nodes, resolving conflicts by weighting the dimensions according to their predictive relevance for the party. The digital twin outputs a single Yes/No/Abstention vote. We set the temperature to 0.0 for all predictions.
+
+
+\section{Evaluation Metrics}
+
+(i) Data Scarcity
+
+(ii) Novelty
+
+(iii) Pluralism
+
+\section{Discussion}
+
+
+
+\section{Next Steps}
+
+\textbf{Affiliation augmentation.} The next empirical step is to construct time-stamped features from SwissParl PersonInterest records, public firm links, sector mappings, and political financing data, then test whether they improve vote prediction in sparse party-topic settings.
+
+\textbf{Baseline and ablation ladder.} We will compare majority-class, party-prior, topic-prior, party-topic-prior, recency, text-only, affiliation-only, and combined models. The key test is whether affiliation features improve over strong party-topic and recency baselines.
+
+\textbf{Vote polarity correction.} We will build preprocessing rules that map procedural Yes/No labels to substantive policy stances when motions invert the meaning of a vote.
+
+\textbf{Reasoning-augmented predictions.} We plan to fine-tune LLMs and agents with GRPO-based reinforcement learning so that they generate explicit reasoning chains alongside Yes/No/Abstention predictions. This should come after the simpler affiliation-augmentation experiment establishes whether the extra evidence is useful.
+
+\textbf{Pluralist multi-agent design.} We will clarify whether pluralism should be operationalized as multiple party agents, constituency agents, policy-domain agents, or deliberative agents that expose competing arguments. Agent2Agent protocols may provide useful infrastructure for such architectures, but the conceptual unit of pluralism should be specified before system design.
+
+\section{Ethical Considerations}
+
+Political digital twins present clear risks. They may be mistaken for authentic representatives, used to manipulate political messaging, or evaluated only by predictive accuracy while ignoring explanation quality and democratic legitimacy. Affiliation-augmented systems add another risk: they may invite over-interpretation of firm links as causal proof of influence. Any deployment should therefore report results and models transparently, mark outputs as simulation results, preserve provenance for all evidence, report uncertainty, and avoid presenting a generated prediction as a substitute for accountable political judgment.
+
+\section{Conclusion}
+
+
+\bibliography{references}
+
+\appendix
+
+% Cambiar el nombre del apéndice
+\section*{Supplemental Material}
+\addcontentsline{toc}{section}{Supplemental Material}
+
+\section{A: ...}\label{ap:clusters}
+
+
+
+\end{document}
