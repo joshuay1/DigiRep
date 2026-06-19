@@ -39,7 +39,10 @@
 \maketitle
 
 \begin{abstract}
-\noindent Large Language Models (LLMs)
+\noindent 
+Large Language Models (LLMs) generate consensus statements that better integrate diverse political viewpoints? We study this question using digital twins of lawmakers grounded in institutional records. These agentic twins draw on semantic representations constructed from speeches, votes, and manifestos to produce reasoned responses to policy questions, reflecting different internal perspectives. We then use an LLM-mediator to aggregate these responses into a single consensus statement. We compare these generated statements to official party press releases. While press releases often prioritize coherence and messaging discipline, they can obscure internal diversity. By contrast, LLM-based consensus formation explicitly integrates heterogeneous viewpoints into a unified position.
+Our results show that digital twins can produce consensus statements that better reflect the structure of internal disagreement while remaining coherent and policy-consistent. This suggests a new approach to representing collective political reasoning—one that is both data-driven and explicitly pluralistic.
+
 \end{abstract}
 
 \clearpage
@@ -163,11 +166,13 @@ Finally, the digital twin receives the information of the retrieved nodes within
 
 \section{Evaluation Metrics}
 
-(i) Data Scarcity
-
-(ii) Novelty
 
 (iii) Pluralism
+
+\section{Results}
+
+This result is in line with \citeauthor{luders2024attitude} (\citeyear{luders2024attitude}), who find that Republican viewpoints are less coherent than Democratic viewpoints. This pattern is reproduced here: LLMs have fewer difficulties finding common ground within left‑wing parties than within right‑wing parties, because universalist solutions are easier to represent than solutions based on trade‑offs and targeted policies.
+
 
 \section{Discussion}
 
